@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Transactions Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 5px;
+        }
+        #result, #rawResponse {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Transactions Tracker</h1>
+    <div>
+        <input type="text" id="addressInput" placeholder="Enter Ethereum address">
+        <button onclick="fetchTransactions()">Fetch Transactions</button>
+        <button onclick="fetchExpenses()">Fetch Expenses</button>
+    </div>
+    <div id="result"></div>
+    <h3>Raw Response:</h3>
+    <div id="rawResponse"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function fetchData(endpoint) {
+            const address = document.getElementById('addressInput').value;
+            if (!address) {
+                alert('Please enter an Ethereum address');
+                return;
+            }
+            const resultDiv = document.getElementById('result');
+            const rawResponseDiv = document.getElementById('rawResponse');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/${endpoint}/${address}`);
+                const contentType = response.headers.get('content-type');
+                const rawText = await response.text();
+                rawResponseDiv.textContent = `Status: ${response.status}\nContent-Type: ${contentType}\n\n${rawText}`;
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error(`Expected JSON, got ${contentType}`);
+                }
+
+                const data = JSON.parse(rawText);
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                console.error('Fetch error:', error);
+            }
+        }
+
+        function fetchTransactions() {
+            fetchData('transactions');
+        }
+
+        function fetchExpenses() {
+            fetchData('expenses');
+        }
+    </script>
+</body>
+</html>
